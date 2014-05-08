@@ -3,38 +3,66 @@
 	<title>Mandlebrot Set</title>
 	<script type="text/javascript" src="js/jquery.min.js"></script>
 	<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/ui.js"></script>
 	<style>
 		#render-out {
 			display: block;
 			cursor: zoom-in;
+			float: left;
+		}
+		#zoom-list {
+			float: right;
+			padding-left: 10px;
+		}
+		#zoom-list li {
+			cursor: pointer;
+			border-bottom: 1px solid white;
+		}
+		#zoom-list li:hover {
+			border-bottom: 1px solid black;
+		}
+		#zoom-list .current-zoom {
+			color: green;
+		}
+		#zoom-list .over-zoom {
+			color: gray;
 		}
 	</style>
 </head>
 <body>
-<a href="#" id="button-clicker">Draw Detailed</a>
-<canvas id="render-out" width="500" height="500"></canvas>
-<script type="text/javascript">
-	var top2 = 1.75;
-	var right = 1;
-	var bottom = -1.75;
-	var left = -2.5;
-	var iterations = 100;
-	var $render_out = $('#render-out');
-	render($render_out, 200, 200, iterations, top2, right, bottom, left);
-	$('#button-clicker').click(function(){
-		render($render_out, 500, 500, iterations * 2, top2, right, bottom, left);
-	});
-	$('#render-out').click(function(eve) {
-		var transformed_x = scale_value(eve.offsetX, 0, $render_out.width(), left, right);
-		var transformed_y = scale_value(eve.offsetY, 0, $render_out.height(), top2, bottom);
-		var new_half_width = (right - left)/4;
-		var new_half_height = (top2 - bottom)/4;
-		left = transformed_x - new_half_width;
-		right = transformed_x + new_half_width;
-		top2 = transformed_y + new_half_height;
-		bottom = transformed_y - new_half_height;
-		render($render_out, 200, 200, iterations * 2, top2, right, bottom, left);
-	});
-</script>
+	<a href="#" id="button-clicker">Draw Detailed</a>
+	Iterations:
+	<input id="iterations" value="1000">
+	<div>
+		<canvas id="render-out" width="500" height="500"></canvas>
+		<div id="help">Click the map to zoom in, click draw detailed to draw at full resolution, click history to navigate to that position, arrow keys navigate history</div>
+		<ul id="zoom-list"><li>item</li></ul>
+	</div>
+	<script type="text/javascript">
+		add_zoom(1.75, 1, -1.75, -2.5);
+		var iterations = get_iterations();
+		var $render_out = $('#render-out');
+		render($render_out, 200, 200, get_iterations(), get_current_region());
+		$('#button-clicker').click(function(){
+			render($render_out, 500, 500, get_iterations(), get_current_region());
+		});
+		$('#render-out').click(function(eve) {
+			var region = get_current_region();
+			var top    = region[0],
+			    right  = region[1],
+			    bottom = region[2],
+			    left   = region[3];
+			var transformed_x = scale_value(eve.offsetX, 0, $render_out.width(), left, right);
+			var transformed_y = scale_value(eve.offsetY, 0, $render_out.height(), top, bottom);
+			var new_half_width = (right - left)/4;
+			var new_half_height = (top - bottom)/4;
+			add_zoom(transformed_y + new_half_height,   // top
+			         transformed_x + new_half_width,   // right
+			         transformed_y - new_half_height,  // bottom
+			         transformed_x - new_half_width); // left
+			render($render_out, 200, 200, get_iterations(), get_current_region());
+		});
+		register_keys();
+	</script>
 </body>
 </html>

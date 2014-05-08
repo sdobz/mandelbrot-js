@@ -37,71 +37,39 @@ function mandle_continuous_point(x0, y0, iterations) {
 	return i;
 }
 
-function render($e, width, height, iterations, top, right, bottom, left) {
-	var points = new Float32Array(width*height);
-	var hist = new Uint16Array(iterations + 2);
-	/* Initialize to 1 past hist[iterations] */
-	for (var i = 0; i < iterations + 2; i += 1) {
-		hist[i] = 0;
+function get_color(i, iterations) {
+	/* i in range 0-1 */
+	if (i == iterations) {
+		return '#000';
 	}
+	return 'hsl(' + (((i/200)%1)*360).toString() + ',50%,50%);';
+}
+
+function render($e, width, height, iterations, region) {
+	var top    = region[0],
+	    right  = region[1],
+	    bottom = region[2],
+	    left   = region[3];
 	var total = 0;
-	i = 0;
 	var v;
-	/* First pass
-	- Transform point from canvas space to mandle space
-	- Calculate # iterations
-	- Build histogram
-	- Calculate iteration fraction
-	 */
-	for (var row = 0; row < height; row += 1) {
-		for (var col = 0; col < width; col += 1) {
-			v = mandle_continuous_point(
-				scale_value(col, 0, width, left, right),
-				scale_value(row, 0, height, top, bottom),
-				iterations);
-			points[i] = v;
-			i += 1;
-			hist[Math.floor(v)] += 1;
-			total += v;
-		}
-	}
 	var ctx = $e[0].getContext('2d');
 	var pixel_width = $e.width() / width;
 	var pixel_height = $e.height() / height;
-	i = 0;
-	var new_v;
 	/*
-	Second pass:
-	- Sum histogram iterations
-	- Render
-	*/
-	for (row = 0; row < height; row += 1) {
-		for (col = 0; col < width; col += 1) {
-			/*
-			new_v = 0;
-			if(points[i] == iterations) {
-				new_v = 1;
-			}
-			else {
-				for (var j = 0; j < Math.floor(points[i]); j += 1) {
-					new_v += hist[j];
-				}
-				new_v /= total;
-			}
-			*/
-			new_v = points[i] / iterations;
-			ctx.fillStyle = get_color(new_v);
+	- Transform point from canvas space to mandle space
+	- Calculate # iterations
+	- Calculate iteration fraction
+	- Get color
+	- Plot point(rect)
+	 */
+	for (var row = 0; row < height; row += 1) {
+		for (var col = 0; col < width; col += 1) {
+			ctx.fillStyle = get_color(mandle_continuous_point(
+			    scale_value(col, 0, width, left, right),
+			    scale_value(row, 0, height, top, bottom),
+			    iterations), iterations);
 			ctx.fillRect(Math.floor(col * pixel_width), Math.floor(row * pixel_height),
-						 Math.ceil(pixel_width), Math.ceil(pixel_height));
-			i += 1;
+			             Math.ceil(pixel_width), Math.ceil(pixel_height));
 		}
 	}
-}
-
-function get_color(i) {
-	/* i in range 0-1 */
-	if (i == 1) {
-		return '#000';
-	}
-	return 'hsl(' + (((i*3)%1)*360).toString() + ',50%,50%);';
 }
