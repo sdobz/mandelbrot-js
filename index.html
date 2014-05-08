@@ -1,0 +1,52 @@
+<html>
+<head>
+	<title>Mandlebrot Set</title>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	<style>
+		#render-out {
+			display: block;
+			cursor: zoom-in;
+		}
+	</style>
+</head>
+<body>
+<a href="#" id="button-clicker">Draw Detailed</a>
+<canvas id="render-out" width="500" height="500"></canvas>
+<script type="text/javascript">
+	var top2 = 1.75;
+	var right = 1;
+	var bottom = -1.75;
+	var left = -2.5;
+	var iterations = 100;
+	var $render_out = $('#render-out');
+	$.ajax(get_url(200, 200, iterations, top2, right, bottom, left, 0))
+	.done(function(data) {
+		render($render_out, JSON.parse(data));
+	});
+	$('#button-clicker').click(function(){
+		$.ajax(get_url(500, 500, iterations * 2, top2, right, bottom, left, 0))
+		.done(function(data) {
+			render($render_out, JSON.parse(data));
+		});
+	});
+	$('#render-out').click(function(eve) {
+		var transformed_x = scale_value(eve.offsetX, 0, $render_out.width(), left, right);
+		var transformed_y = scale_value(eve.offsetY, 0, $render_out.height(), top2, bottom);
+		console.log('Transformed:', transformed_x, transformed_y);
+		var new_half_width = (right - left)/4;
+		var new_half_height = (top2 - bottom)/4;
+		console.log('New w/h:', new_half_width * 2, new_half_height * 2);
+		left = transformed_x - new_half_width;
+		right = transformed_x + new_half_width;
+		top2 = transformed_y + new_half_height;
+		bottom = transformed_y - new_half_height;
+		console.log('New coords:', top2, right, bottom, left)
+		$.ajax(get_url(200, 200, iterations, top2, right, bottom, left, 0))
+		.done(function(data) {
+			render($render_out, JSON.parse(data));
+		});
+	});
+</script>
+</body>
+</html>
