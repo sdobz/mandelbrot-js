@@ -9,7 +9,7 @@ function scale_value(value, v_low, v_high, s_low, s_high) {
 
 max = 1 << 16;
 log2 = Math.log(2);
-function mandle_continuous_point(x0, y0, iterations) {
+function mandel_continuous_point(x0, y0, iterations) {
 	// TODO: Cartioid/2nd bulb check
 	var x = 0.0;
 	var y = 0.0;
@@ -37,12 +37,26 @@ function mandle_continuous_point(x0, y0, iterations) {
 	return i;
 }
 
+
+var cycle = 20;
+var m, h, l;
 function get_color(i, iterations) {
 	/* i in range 0-1 */
 	if (i == iterations) {
 		return '#000';
 	}
-	return 'hsl(' + (((i/200)%1)*360).toString() + ',50%,50%);';
+	m = (i % cycle)/cycle;
+	if (m < 0.5) {
+		h = 240; // blue
+		// black to white
+		l = scale_value(m, 0, 0.5, 0, 100);
+	}
+	else {
+		h = 30; // orange
+		l = scale_value(m, 0.5, 1, 100, 0);
+	}
+
+	return 'hsl(' + h.toString() + ',50%,' + l.toString() + '%);';
 }
 
 function render($e, width, height, iterations, region) {
@@ -56,7 +70,7 @@ function render($e, width, height, iterations, region) {
 	var pixel_width = $e.width() / width;
 	var pixel_height = $e.height() / height;
 	/*
-	- Transform point from canvas space to mandle space
+	- Transform point from canvas space to mandel space
 	- Calculate # iterations
 	- Calculate iteration fraction
 	- Get color
@@ -64,7 +78,7 @@ function render($e, width, height, iterations, region) {
 	 */
 	for (var row = 0; row < height; row += 1) {
 		for (var col = 0; col < width; col += 1) {
-			ctx.fillStyle = get_color(mandle_continuous_point(
+			ctx.fillStyle = get_color(mandel_continuous_point(
 			    scale_value(col, 0, width, left, right),
 			    scale_value(row, 0, height, top, bottom),
 			    iterations), iterations);

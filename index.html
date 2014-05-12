@@ -1,9 +1,10 @@
 <html>
 <head>
-	<title>Mandlebrot Set</title>
+	<title>Mandelbrot Set</title>
 	<script type="text/javascript" src="js/jquery.min.js"></script>
 	<script type="text/javascript" src="js/main.js"></script>
 	<script type="text/javascript" src="js/ui.js"></script>
+	<script type="text/javascript" src="js/glsl.js"></script>
 	<style>
 		#render-out {
 			display: block;
@@ -34,7 +35,7 @@
 	Iterations:
 	<input id="iterations" value="1000">
 	<div>
-		<canvas id="render-out" width="500" height="500"></canvas>
+		<canvas id="render-out" width="750" height="750"></canvas>
 		<div id="help">Click the map to zoom in, click draw detailed to draw at full resolution, click history to navigate to that position, arrow keys navigate history</div>
 		<ul id="zoom-list"><li>item</li></ul>
 	</div>
@@ -44,7 +45,7 @@
 		var $render_out = $('#render-out');
 		render($render_out, 200, 200, get_iterations(), get_current_region());
 		$('#button-clicker').click(function(){
-			render($render_out, 500, 500, get_iterations(), get_current_region());
+			render($render_out, 750, 750, get_iterations(), get_current_region());
 		});
 		$('#render-out').click(function(eve) {
 			var region = get_current_region();

@@ -1,0 +1,139 @@
+
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hello World</title>
+</head>
+<body>
+
+<div>
+<a href="#" id="go">Go</a>
+<a href="#" id="stop">Stop</a>
+</div>
+
+<canvas id="viewport" width="600" height="400"></canvas>
+
+<script id="fragment" type="x-shader/x-fragment">
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+const int iterations = 1000;
+const int palette_size = 20;
+uniform vec2 resolution;
+uniform float top;
+uniform float right;
+uniform float bottom;
+uniform float left;
+
+float scale_value(in float value, in float v_low, in float v_high, in float s_low, in float s_high) {
+  return (((value - v_low)/(v_high - v_low)) * (s_high - s_low)) + s_low;
+}
+
+vec4 HSVtoRGB(const float h, const float s, const float v) {
+    float r, g, b, i, f, p, q, t;
+    i = floor(h * 6.0);
+    f = h * 6.0 - i;
+    p = v * (1.0 - s);
+    q = v * (1.0 - f * s);
+    t = v * (1.0 - (1.0 - f) * s);
+    if (h < 0.16666666666) {
+      r = v; g = t; b = p;
+    } else if (h < 0.33333333333) {
+      r = q; g = v; b = p;
+    } else if (h < .5) {
+      r = p; g = v; b = t;
+    } else if (h < 0.66666666666) {
+      r = p; g = q; b = v;
+    } else if (h < 0.83333333333) {
+      r = t; g = p; b = v;
+    } else {
+      r = v; g = p; b = q;
+    }
+    return vec4(r,g,b,1.0);
+}
+
+vec4 get_color(const int i) {
+  float m = mod(float(i), float(palette_size))/float(palette_size);
+  float h, v;
+  if (m < 0.5) {
+    h = 0.66666666666; // blue
+    // black to white
+    v = scale_value(m, 0.0, 0.5, 0.0, 1.0);
+  }
+  else {
+    h = 0.08333333333; // orange
+    v = scale_value(m, 0.5, 1.0, 1.0, 0.0);
+  }
+  return HSVtoRGB(h, 0.5, v);
+}
+
+
+// const float log2 = 0.6931471805599453; // ln(2)
+const float max = 4.0;
+int mandel_point(in float x0, in float y0) {
+  float x = 0.0;
+  float y = 0.0;
+  float xtemp;
+  float ytemp;
+  for (int i=0; i < iterations; i++) {
+    if(x*x + y*y > max) {
+      return i;
+    }
+    xtemp = x*x - y*y + x0;
+    ytemp = 2.0*x*y + y0;
+    if (x == xtemp && y == ytemp) {
+      return iterations;
+    }
+    x = xtemp;
+    y = ytemp;
+  }
+  return iterations;
+}
+void main (void) {
+  int i = mandel_point(scale_value(gl_FragCoord.x/resolution.x, 0.0, 1.0, left,  right),
+                       scale_value(gl_FragCoord.y/resolution.y, 0.0, 1.0,  top, bottom));
+  if(i > iterations - 5) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  }
+  else {
+    gl_FragColor = get_color(i);
+  }
+}
+</script>
+
+<script src="js/glsl.js" type="text/javascript"></script>
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+if (!Glsl.supported()) alert("WebGL is not supported.");
+
+var glsl = Glsl({
+  canvas: document.getElementById("viewport"),
+  fragment: document.getElementById("fragment").textContent,
+  variables: {
+      top: -1,
+      right: 1,
+      bottom: -1,
+      left: -2.5
+  },
+  update: function (time) {
+    var center_x = 0.3750001200618655, center_y = -0.2166393884377127;
+    var scale = 1000/(time*time);
+    this.set('top', center_y + scale);
+    this.set('right', center_x + scale);
+    this.set('bottom', center_y - scale);
+    this.set('left', center_x - scale*2.5);
+  }
+}).start();
+
+$('#go').click(function(){
+  glsl.start();
+});
+$('#stop').click(function(){
+    console.log('stop');
+  glsl.stop();
+})
+</script>
+</body>
+</html>
