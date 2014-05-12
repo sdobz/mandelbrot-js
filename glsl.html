@@ -94,7 +94,7 @@ int mandel_point(in float x0, in float y0) {
 void main (void) {
   int i = mandel_point(scale_value(gl_FragCoord.x/resolution.x, 0.0, 1.0, left,  right),
                        scale_value(gl_FragCoord.y/resolution.y, 0.0, 1.0,  top, bottom));
-  if(i > iterations - 5) {
+  if(i == iterations) {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   }
   else {
@@ -119,7 +119,8 @@ var glsl = Glsl({
   },
   update: function (time) {
     var center_x = 0.3750001200618655, center_y = -0.2166393884377127;
-    var scale = 1000/(time*time);
+    var center_x = 0.3760001200618655, center_y = -0.2266393884377127;
+    var scale = 10000/(time*time);
     this.set('top', center_y + scale);
     this.set('right', center_x + scale);
     this.set('bottom', center_y - scale);
