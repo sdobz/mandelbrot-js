@@ -91,8 +91,8 @@ int mandel_point(in float x0, in float y0) {
   return iterations;
 }
 void main (void) {
-  int i = mandel_point(scale_value(gl_FragCoord.x/resolution.x, -2.5, 1.0, left,   right),
-                       scale_value(gl_FragCoord.y/resolution.y, -1.0, 1.0, bottom, top));
+  int i = mandel_point(scale_value(gl_FragCoord.x/resolution.x, 0.0, 1.0, left,   right),
+                       scale_value(gl_FragCoord.y/resolution.y, 0.0, 1.0, bottom, top));
   if(i == iterations) {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   }
@@ -142,12 +142,12 @@ var $viewport = $('#viewport');
 
 var glsl = Glsl({
   canvas: $viewport[0],
-  fragment: $('#fragment-checker').text(),
+  fragment: $('#fragment-mandel').text(),
   variables: {
-      top: 1,
+      top: 1.5,
       right: 1,
-      bottom: 0,
-      left: 0
+      bottom: -1.5,
+      left: -2.5
   },
   update: function (time) {}
 }).start();
@@ -163,10 +163,11 @@ function set_pos() {
   old_y = view_y;
   relative_x = 1-(view_x / width);
   relative_y = view_y / height;
-  glsl.set('left', relative_x);
-  glsl.set('right', relative_x + 1/zoom);
-  glsl.set('top', relative_y + 1/zoom);
-  glsl.set('bottom', relative_y);
+  var inv_zoom = 1/zoom;
+  glsl.set('left', relative_x - 2.5 * inv_zoom);
+  glsl.set('right', relative_x + inv_zoom);
+  glsl.set('top', relative_y + 1.5 * inv_zoom);
+  glsl.set('bottom', relative_y - 1.5 * inv_zoom);
 }
 
 $('#go').click(function(){
@@ -178,16 +179,16 @@ $('#stop').click(function(){
 
 
 var dragging = false;
-var view_x = 0, view_y = 0, zoom = 1;
+var width = $viewport.width();
+var height = $viewport.height();
+var view_x = width, view_y = 0, zoom = 1;
 var mouse_x = 0, mouse_y = 0;
 var zoom = 1;
 var offset_x, offset_y;
-var width = $viewport.width();
-var height = $viewport.height();
 var abscroll = 0;
 $viewport.mousedown(function(e) {
-  offset_x = view_x - e.offsetX/zoom;
-  offset_y = view_y - e.offsetY/zoom;
+  offset_x = view_x - (e.offsetX*3.5)/zoom;
+  offset_y = view_y - (e.offsetY*3)/zoom;
   dragging = true;
   //glsl.start();
   resting = false;
@@ -196,8 +197,8 @@ $viewport.mousedown(function(e) {
   mouse_x = e.offsetX;
   mouse_y = e.offsetY;
   if (dragging) {
-    view_x = offset_x + mouse_x/zoom;
-    view_y = offset_y + mouse_y/zoom;
+    view_x = offset_x + (mouse_x*3.5)/zoom;
+    view_y = offset_y + (mouse_y*3)/zoom;
     set_pos();
   }
   return false;
@@ -212,9 +213,8 @@ $viewport.mousedown(function(e) {
   zoom = Math.exp(abscroll/1000);
   var zoom_factor =  (1/zoom - 1/old_zoom);
   // | <- view_x   x   view_x + 1/zoom -> |
-  view_x += (mouse_x/width) * width * zoom_factor;
-  view_y -= (1-(mouse_y/height)) * height * zoom_factor;
-  console.log(mouse_y, height, zoom_factor)
+  view_x += ((mouse_x/width)*3.5) * width * zoom_factor;
+  view_y -= ((1-(mouse_y/height))*3) * height * zoom_factor;
   set_pos();
   //glsl.stop();
   return false;
