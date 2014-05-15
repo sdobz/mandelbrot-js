@@ -157,6 +157,8 @@ var glsl = Glsl({
 var old_x, old_y;
 resting = false;
 
+var top_offset = 1.5, right_offset = 1, bottom_offset = -1.5, left_offset = -2.5;
+
 function set_pos() {
   var relative_x, relative_y;
   old_x = view_x;
@@ -164,12 +166,15 @@ function set_pos() {
   relative_x = 1-(view_x / width);
   relative_y = view_y / height;
   var inv_zoom = 1/zoom;
-  glsl.set('left', relative_x - 2.5 * inv_zoom);
-  glsl.set('right', relative_x + inv_zoom);
-  glsl.set('top', relative_y + 1.5 * inv_zoom);
-  glsl.set('bottom', relative_y - 1.5 * inv_zoom);
+  glsl.set('left', relative_x + left_offset * inv_zoom);
+  glsl.set('right', relative_x + right_offset * inv_zoom);
+  glsl.set('top', relative_y +  top_offset * inv_zoom);
+  glsl.set('bottom', relative_y + bottom_offset * inv_zoom);
 }
 
+function scale_value(value, v_low, v_high, s_low, s_high) {
+  return (((value - v_low)/(v_high - v_low)) * (s_high - s_low)) + s_low;
+}
 $('#go').click(function(){
   glsl.start();
 });
@@ -187,8 +192,8 @@ var zoom = 1;
 var offset_x, offset_y;
 var abscroll = 0;
 $viewport.mousedown(function(e) {
-  offset_x = view_x - (e.offsetX*3.5)/zoom;
-  offset_y = view_y - (e.offsetY*3)/zoom;
+  offset_x = view_x - (e.offsetX*(right_offset - left_offset))/zoom;
+  offset_y = view_y - (e.offsetY*(top_offset - bottom_offset))/zoom;
   dragging = true;
   //glsl.start();
   resting = false;
@@ -197,8 +202,8 @@ $viewport.mousedown(function(e) {
   mouse_x = e.offsetX;
   mouse_y = e.offsetY;
   if (dragging) {
-    view_x = offset_x + (mouse_x*3.5)/zoom;
-    view_y = offset_y + (mouse_y*3)/zoom;
+    view_x = offset_x + (mouse_x*(right_offset - left_offset))/zoom;
+    view_y = offset_y + (mouse_y*(top_offset - bottom_offset))/zoom;
     set_pos();
   }
   return false;
@@ -213,8 +218,8 @@ $viewport.mousedown(function(e) {
   zoom = Math.exp(abscroll/1000);
   var zoom_factor =  (1/zoom - 1/old_zoom);
   // | <- view_x   x   view_x + 1/zoom -> |
-  view_x += ((mouse_x/width)*3.5) * width * zoom_factor;
-  view_y -= ((1-(mouse_y/height))*3) * height * zoom_factor;
+  view_x += scale_value(mouse_x, 0, width, left_offset, right_offset) * width * zoom_factor;
+  view_y -= scale_value(mouse_y, 0, height, top_offset, bottom_offset) * height * zoom_factor;
   set_pos();
   //glsl.stop();
   return false;
